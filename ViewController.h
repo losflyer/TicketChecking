@@ -7,7 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+typedef NS_ENUM(NSInteger, CHECKSTATUS)
+{
+    CHECKSTATUS_TICKET = 0,
+    CHECKSTATUS_BRACELET,
 
+};
 @interface ViewController : UIViewController
 @property (weak, nonatomic) IBOutlet UIView * popView;
 @property (weak, nonatomic) IBOutlet UIView * captureView;

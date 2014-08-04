@@ -14,6 +14,7 @@
 @interface ViewController ()<AVCaptureMetadataOutputObjectsDelegate, UIAlertViewDelegate>
 {
     BOOL _isReading;
+    CHECKSTATUS checkStatus;
 }
 @property (strong,nonatomic)AVCaptureDevice * device;
 @property (strong,nonatomic)AVCaptureDeviceInput * input;
@@ -29,7 +30,7 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     _isReading = NO;
-    [self startReading];
+    [self letusGo];
     
 }
 
@@ -37,8 +38,41 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+    
 }
 
+
+#pragma mark - progress
+-(void)letusGo
+{   
+    [self checkTicket];
+}
+
+-(BOOL)checkTicket
+{
+    checkStatus = CHECKSTATUS_TICKET;
+    [self startReading];
+    return YES;
+}
+
+
+-(void)getCheckTicketResult
+{
+
+}
+
+-(BOOL)checkBracelet
+{
+    checkStatus = CHECKSTATUS_BRACELET;
+    return YES;
+}
+
+-(void)getCheckBraceletResult
+{
+    
+}
+
+#pragma mark - Qr scan
 - (BOOL)startReading {
     _isReading = YES;
     NSError *error;
@@ -64,7 +98,7 @@
     [captureMetadataOutput setMetadataObjectsDelegate:self queue:dispatchQueue];
     
 //    if (self.qrcodeFlag)
-        [captureMetadataOutput setMetadataObjectTypes:[NSArray arrayWithObject:AVMetadataObjectTypeQRCode]];
+    [captureMetadataOutput setMetadataObjectTypes:[NSArray arrayWithObject:AVMetadataObjectTypeQRCode]];
 //    else
 //        [captureMetadataOutput setMetadataObjectTypes:[NSArray arrayWithObjects:AVMetadataObjectTypeEAN13Code, AVMetadataObjectTypeEAN8Code, AVMetadataObjectTypeCode128Code, AVMetadataObjectTypeQRCode, nil]];
     
@@ -74,9 +108,15 @@
     [self.captureView.layer addSublayer:_videoPreviewLayer];
     
     [_captureSession startRunning];
-     self.qRLabel.text = @"12345";
+//     self.qRLabel.text = @"12345";
     return YES;
 }
+
+
+
+
+
+
 #pragma mark AVCaptureMetadataOutputObjectsDelegate
 /*
 
@@ -96,6 +136,20 @@
         NSLog(stringValue);
 //        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Default Alert View" message:stringValue delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
 //        [alertView show];
+        switch (checkStatus) {
+            case CHECKSTATUS_TICKET:
+            {
+                [self getCheckTicketResult];
+            }
+                break;
+            case CHECKSTATUS_BRACELET:
+            {
+                [self getCheckBraceletResult];
+            }
+                break;
+            default:
+                break;
+        }
         
     }
 // [_captureSession stopRunning];
