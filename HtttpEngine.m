@@ -15,10 +15,35 @@
 @implementation HtttpEngine
 
 
-
-
--(void)sendCheckTicketRequest
++ (HtttpEngine *)sharedInstance
 {
+    static HtttpEngine *sharedGlobalInstance = nil;
+    static dispatch_once_t predicate; dispatch_once(&predicate, ^{
+        sharedGlobalInstance = [[HtttpEngine alloc] init];
+    });
+    return sharedGlobalInstance;
+}
+
+//- (void)voteContent:(NSString *)contentID inBattle:(NSString *)battleID from:(id)requester succeededBlock:(void (^)(NSInteger attackerVote, NSInteger defenderVote))succeededBlock failedBlock:(YHENetworkFailedBlock)failedBlock
+//{
+//    [self.standardEngine postWithAPI:@"vs/voteVS"
+//                          parameters:@{kKeyJSONFID: contentID, kKeyJSONVID: battleID}
+//                                from:requester
+//                    succeededHandler:^(id responseObject) {
+//                        NSInteger attackerVote = [responseObject integerForKey:kKeyJSONAttackerVote];
+//                        NSInteger defenderVote = [responseObject integerForKey:kKeyJSONDefenderVote];
+//                        succeededBlock(attackerVote, defenderVote);
+//                    } failedHandler:^(NSError *error) {
+//                        failedBlock(error);
+//                    }];
+//}
+
+
+
+-(void)sendCheckTicketRequest:(void (^)(BOOL  isSucess))resultBlock
+{
+
+    
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
     NSDictionary *parameters1 = @{@"open_key": @"6f330cf7", @"method": @"Yohood.Entrance.ticket",@"ticket_code": @"ticket:20140724"};
     NSMutableDictionary * parameters =  [[NSMutableDictionary alloc] initWithDictionary:parameters1];
@@ -33,8 +58,11 @@
             UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Default Alert View" message:msg delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
             [alertView show];
         }
+        resultBlock(YES);
+        
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"Error: %@", error);
+        resultBlock(NO);
     }];
 
 }

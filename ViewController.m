@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 #import <AVFoundation/AVFoundation.h>
-
+#import "HtttpEngine.h"
 
 
 @interface ViewController ()<AVCaptureMetadataOutputObjectsDelegate, UIAlertViewDelegate>
@@ -58,7 +58,17 @@
 
 -(void)getCheckTicketResult
 {
-
+    [[HtttpEngine sharedInstance] sendCheckTicketRequest:^(BOOL  isSucess)resultBlock{
+        if (isSucess) {
+            
+            
+        }
+        else
+        {
+        
+        }
+    
+    }];
 }
 
 -(BOOL)checkBracelet
@@ -97,23 +107,17 @@
     dispatchQueue = dispatch_queue_create("myQueue", NULL);
     [captureMetadataOutput setMetadataObjectsDelegate:self queue:dispatchQueue];
     
-//    if (self.qrcodeFlag)
+
     [captureMetadataOutput setMetadataObjectTypes:[NSArray arrayWithObject:AVMetadataObjectTypeQRCode]];
-//    else
-//        [captureMetadataOutput setMetadataObjectTypes:[NSArray arrayWithObjects:AVMetadataObjectTypeEAN13Code, AVMetadataObjectTypeEAN8Code, AVMetadataObjectTypeCode128Code, AVMetadataObjectTypeQRCode, nil]];
-    
+
     _videoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession];
     [_videoPreviewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
     [_videoPreviewLayer setFrame:self.captureView.layer.bounds];
     [self.captureView.layer addSublayer:_videoPreviewLayer];
     
     [_captureSession startRunning];
-//     self.qRLabel.text = @"12345";
     return YES;
 }
-
-
-
 
 
 
@@ -133,9 +137,7 @@
     if (metadataObjects != nil && [metadataObjects count] > 0) {
         AVMetadataMachineReadableCodeObject *metadataObj = [metadataObjects objectAtIndex:0];
         stringValue = metadataObj.stringValue;
-        NSLog(stringValue);
-//        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Default Alert View" message:stringValue delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
-//        [alertView show];
+        NSLog(@"QR = %@", stringValue);
         switch (checkStatus) {
             case CHECKSTATUS_TICKET:
             {

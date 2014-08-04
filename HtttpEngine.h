@@ -10,5 +10,7 @@
 
 @interface HtttpEngine : NSObject
 
++ (HtttpEngine *)sharedInstance;
 -(void)sendCheckTicketRequest;
+
 @end
