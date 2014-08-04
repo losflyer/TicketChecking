@@ -11,6 +11,6 @@
 @interface HtttpEngine : NSObject
 
 + (HtttpEngine *)sharedInstance;
--(void)sendCheckTicketRequest;
+-(void)sendCheckTicketRequest:(void (^)(BOOL  isSucess))resultBlock;
 
 @end

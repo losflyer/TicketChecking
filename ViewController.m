@@ -58,16 +58,12 @@
 
 -(void)getCheckTicketResult
 {
-    [[HtttpEngine sharedInstance] sendCheckTicketRequest:^(BOOL  isSucess)resultBlock{
+    [[HtttpEngine sharedInstance] sendCheckTicketRequest:^(BOOL isSucess) {
         if (isSucess) {
             
-            
-        }
-        else
-        {
+        } else {
         
         }
-    
     }];
 }
 
