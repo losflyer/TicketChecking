@@ -11,6 +11,6 @@
 @interface HtttpEngine : NSObject
 
 + (HtttpEngine *)sharedInstance;
--(void)sendCheckTicketRequest:(void (^)(BOOL  isSucess))resultBlock;
 
+-(void)sendCheckTicketRequest:(NSString *)ticketString ResultBlock:(void (^)(NSDictionary * responseDictionary, BOOL  isSucess))responseBlock;
 @end

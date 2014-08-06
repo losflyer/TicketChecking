@@ -10,8 +10,6 @@
 #import "AFHTTPRequestOperationManager.h"
 
 
-#define YHApiPrivateKey @"cd730cc41684571d49e845b21fee256d"
-
 @implementation HtttpEngine
 
 
@@ -24,50 +22,84 @@
     return sharedGlobalInstance;
 }
 
-//- (void)voteContent:(NSString *)contentID inBattle:(NSString *)battleID from:(id)requester succeededBlock:(void (^)(NSInteger attackerVote, NSInteger defenderVote))succeededBlock failedBlock:(YHENetworkFailedBlock)failedBlock
-//{
-//    [self.standardEngine postWithAPI:@"vs/voteVS"
-//                          parameters:@{kKeyJSONFID: contentID, kKeyJSONVID: battleID}
-//                                from:requester
-//                    succeededHandler:^(id responseObject) {
-//                        NSInteger attackerVote = [responseObject integerForKey:kKeyJSONAttackerVote];
-//                        NSInteger defenderVote = [responseObject integerForKey:kKeyJSONDefenderVote];
-//                        succeededBlock(attackerVote, defenderVote);
-//                    } failedHandler:^(NSError *error) {
-//                        failedBlock(error);
-//                    }];
-//}
 
-
-
--(void)sendCheckTicketRequest:(void (^)(BOOL  isSucess))resultBlock
+-(void)sendHttpPostRequest:(NSDictionary*)parametersDictionary ResponseBlock:(void (^)(NSDictionary * responseDictionary, BOOL  isSucess))ResponseBlock
 {
-
-    
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-    NSDictionary *parameters1 = @{@"open_key": @"6f330cf7", @"method": @"Yohood.Entrance.ticket",@"ticket_code": @"ticket:20140724"};
-    NSMutableDictionary * parameters =  [[NSMutableDictionary alloc] initWithDictionary:parameters1];
-    [self _encodeParams:parameters];
-    [manager POST:@"http://api.open.yohobuy.com" parameters:parameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    NSMutableDictionary * finalParameters =  [[NSMutableDictionary alloc] initWithDictionary:parametersDictionary];
+    [self _encodeParams:finalParameters];
+    
+    [manager POST:YH_HOST parameters:finalParameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
         NSLog(@"JSON: %@", responseObject);
         NSDictionary * dictionary;
         if ([responseObject isKindOfClass:[NSDictionary class]])
         {
             dictionary =(NSDictionary *)responseObject;
-            NSString* msg = [dictionary objectForKey:@"message"];
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Default Alert View" message:msg delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
-            [alertView show];
+//            NSString* msg = [dictionary objectForKey:@"message"];
+            
         }
-        resultBlock(YES);
+        ResponseBlock(dictionary, YES);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSLog(@"Error: %@", error);
-        resultBlock(NO);
+//        NSLog(@"Error: %@", error);
+        
+        ResponseBlock(error.userInfo, NO);
     }];
 
 }
 
 
+#pragma mark - 验票
+-(void)sendCheckTicketRequest:(NSString *)ticketString ResultBlock:(void (^)(NSDictionary * responseDictionary, BOOL  isSucess))responseBlock
+{
+
+    NSDictionary *parameters = @{@"open_key":YH_OPEN_KEY, @"method":YH_CHECK_TICKET, @"ticket_code": ticketString};
+    [self sendHttpPostRequest:parameters ResponseBlock:responseBlock];
+}
+
+//验UID
+//http://api.open.yohobuy.com/?open_key=123456&method=Yohood.Entrance.pass&uid=     验证uid
+#pragma mark - 验UID
+-(void)sendCheckUIDRequest:(NSString *)uidString ResultBlock:(void (^)(NSDictionary * responseDictionary, BOOL  isSucess))responseBlock
+{
+
+    NSDictionary *parameters = @{@"open_key":YH_OPEN_KEY, @"method": YH_CHECK_UID, @"uid": uidString};
+    [self sendHttpPostRequest:parameters ResponseBlock:responseBlock];
+
+}
+
+
+#pragma mark - 绑定
+
+-(void)sendBindingRequest
+{
+    //这个是绑定的接口
+    //门票：ticket:20140723111  ,UID=43  使用日期：2014-07-23
+    //http://api.open.yohobuy.com/?open_key=123456&method=Yohood.Entrance.passbinding&uid=用户UID&hand_card=手环CODE
+    
+    
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    NSDictionary *parameters = @{@"open_key": @"6f330cf7", @"method": @"Yohood.Entrance.passbinding",@"uid": @"43", @"hand_card":@"66"};
+    
+    [manager POST:@"http://api.open.yohobuy.com" parameters:parameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            NSLog(@"JSON: %@", responseObject);
+            NSDictionary * dictionary;
+            if ([responseObject isKindOfClass:[NSDictionary class]])
+            {
+                dictionary =(NSDictionary *)responseObject;
+                NSString* msg = [dictionary objectForKey:@"message"];
+                UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Default Alert View" message:msg delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
+                [alertView show];
+            }
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            NSLog(@"Error: %@", error);
+        }];
+}
+
+
+
+
+#pragma mark - Utility
 - (NSString *)YH_MD5:(NSString *)str {
     const char *cStr = [str UTF8String];
     unsigned char result[16];

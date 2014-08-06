@@ -27,10 +27,11 @@
 
 - (void)viewDidLoad
 {
+   
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     _isReading = NO;
-    [self letusGo];
+    [self AlphaGo];
     
 }
 
@@ -43,8 +44,9 @@
 
 
 #pragma mark - progress
--(void)letusGo
-{   
+-(void)AlphaGo
+{
+    NSLog(@"【阿尔法】启动");
     [self checkTicket];
 }
 
@@ -56,30 +58,69 @@
 }
 
 
--(void)getCheckTicketResult
+-(void)getCheckTicketResult:(NSString*)ticketString
 {
-    [[HtttpEngine sharedInstance] sendCheckTicketRequest:^(BOOL isSucess) {
-        if (isSucess) {
-            
-        } else {
-        
-        }
-    }];
+    dispatch_sync(dispatch_get_main_queue(),^{
+        [self.ticketActivity startAnimating];
+    });
+    NSString * ticketCliped;
+    if([ticketString rangeOfString:@"ticket:"].location != NSNotFound)
+    {
+        ticketCliped = [ticketString substringWithRange:NSMakeRange(6, ticketString.length)];
+    }
+    else if([ticketString rangeOfString:@"uid:"].location != NSNotFound)
+    {
+        ticketCliped = [ticketString substringWithRange:NSMakeRange(4, ticketString.length)];
+    } else {
+    
+    }
+  
+    [[HtttpEngine sharedInstance] sendCheckTicketRequest:ticketCliped ResultBlock:^(NSDictionary * responseDictionary, BOOL isSucess) {
+        NSLog(@"sendCheckTicketRequest OK");
+//        dispatch_sync(dispatch_get_main_queue(),^{
+            [self.ticketActivity stopAnimating];
+            if (isSucess) {
+                [self checkBracelet];
+            } else {
+                
+            }
+     }];
 }
 
 -(BOOL)checkBracelet
 {
     checkStatus = CHECKSTATUS_BRACELET;
+    [self startReading];
     return YES;
 }
 
--(void)getCheckBraceletResult
+-(void)getCheckBraceletResult:(NSString*)braceletString
 {
+    dispatch_sync(dispatch_get_main_queue(),^{
+        [self.braceletActivity startAnimating];
+    });
     
+    [[HtttpEngine sharedInstance] sendCheckTicketRequest:^(BOOL isSucess) {
+        NSLog(@"sendCheckTicketRequest OK");
+        dispatch_sync(dispatch_get_main_queue(),^{
+            [self.braceletActivity stopAnimating];
+            
+            if (isSucess) {
+//                [self checkBracelet];
+                
+            } else {
+                
+            }
+            
+            
+        });
+    }];
+
 }
 
 #pragma mark - Qr scan
 - (BOOL)startReading {
+    NSLog(@"摄像头启动");
     _isReading = YES;
     NSError *error;
     AVCaptureDevice *captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
@@ -118,31 +159,36 @@
 
 
 #pragma mark AVCaptureMetadataOutputObjectsDelegate
-/*
+
 
 -(void)stopReading{
     [_captureSession stopRunning];
-    _captureSession = nil;
-    [_videoPreviewLayer removeFromSuperlayer];
-}*/
+    _captureSession = nil; _isReading = NO;
+//    [_videoPreviewLayer removeFromSuperlayer];
+}
 
 -(void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects
       fromConnection:(AVCaptureConnection *)connection
 {
+    if (!_isReading) {
+        return;
+    }
     NSString *stringValue;
     if (metadataObjects != nil && [metadataObjects count] > 0) {
         AVMetadataMachineReadableCodeObject *metadataObj = [metadataObjects objectAtIndex:0];
         stringValue = metadataObj.stringValue;
-        NSLog(@"QR = %@", stringValue);
+        NSLog(@"扫描出二维码:%@", stringValue);
         switch (checkStatus) {
             case CHECKSTATUS_TICKET:
             {
-                [self getCheckTicketResult];
+                NSLog(@"发送检查门票请求");
+                [self getCheckTicketResult:stringValue];
             }
                 break;
             case CHECKSTATUS_BRACELET:
             {
-                [self getCheckBraceletResult];
+                  NSLog(@"发送检查手环请求");
+                [self getCheckBraceletResult:stringValue];
             }
                 break;
             default:
@@ -150,9 +196,25 @@
         }
         
     }
-// [_captureSession stopRunning];
+//    [_captureSession stopRunning];
+    [self stopReading];
     dispatch_sync(dispatch_get_main_queue(),^{
-        self.qRLabel.text = stringValue;
+        switch (checkStatus) {
+            case CHECKSTATUS_TICKET:
+            {
+               self.ticketLabel.text = stringValue;
+            }
+                break;
+            case CHECKSTATUS_BRACELET:
+            {
+                self.braceletLabel.text = stringValue;
+            }
+                break;
+            default:
+                break;
+        }
+
+       
     });
 }
 

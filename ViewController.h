@@ -16,5 +16,8 @@ typedef NS_ENUM(NSInteger, CHECKSTATUS)
 @interface ViewController : UIViewController
 @property (weak, nonatomic) IBOutlet UIView * popView;
 @property (weak, nonatomic) IBOutlet UIView * captureView;
-@property (weak, nonatomic) IBOutlet UILabel * qRLabel;
+@property (weak, nonatomic) IBOutlet UILabel * ticketLabel;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView * ticketActivity;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView * braceletActivity;
+@property (weak, nonatomic) IBOutlet UILabel * braceletLabel;
 @end
